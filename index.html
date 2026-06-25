@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>浙江高考志愿简易筛选</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f6f7fb;
+  color: #172033;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 18px 14px 40px; }
+.hero {
+  background: linear-gradient(135deg, #1556a8, #1f7ad6);
+  color: white;
+  border-radius: 14px;
+  padding: 18px;
+}
+h1 { margin: 0 0 6px; font-size: 23px; }
+.sub { margin: 0; opacity: .9; font-size: 14px; line-height: 1.5; }
+.panel {
+  margin-top: 14px;
+  background: white;
+  border: 1px solid #e3e7ef;
+  border-radius: 12px;
+  padding: 14px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+label { display: block; font-size: 13px; color: #5b6578; margin-bottom: 5px; }
+input, select {
+  width: 100%;
+  border: 1px solid #cad2df;
+  border-radius: 9px;
+  padding: 10px;
+  font-size: 15px;
+  background: white;
+}
+.subjects, .checks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.chip {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.chip.on { background: #1556a8; color: white; border-color: #1556a8; }
+.check { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.check input { width: auto; }
+button {
+  width: 100%;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 16px;
+  background: #1556a8;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+}
+.results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+.module h2 { margin: 0 0 10px; font-size: 18px; }
+.card {
+  border: 1px solid #e4e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+.topline { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.school { font-weight: 700; font-size: 16px; }
+.tag { border-radius: 999px; padding: 3px 9px; font-size: 13px; white-space: nowrap; }
+.tag.steady { background: #e8f6ef; color: #14723d; }
+.tag.safe { background: #eef4ff; color: #1556a8; }
+.major { margin-top: 5px; font-size: 15px; color: #1f2937; }
+.meta { margin-top: 7px; color: #607086; font-size: 13px; line-height: 1.55; }
+.empty { color: #7a8496; font-size: 14px; padding: 16px; background: #f8fafc; border-radius: 10px; }
+.warn { color: #7a4b00; background: #fff4d6; border: 1px solid #ffe1a3; border-radius: 10px; padding: 10px; font-size: 13px; line-height: 1.5; }
+@media (max-width: 820px) {
+  .form-grid, .results { grid-template-columns: 1fr; }
+  .wrap { padding: 12px 10px 28px; }
+  .hero { border-radius: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>浙江高考志愿简易筛选</h1>
+    <p class="sub">输入分数、位次、选科，快速分成「浙江省内」和「省外」两个模块。结果只做初筛，不承诺录取。</p>
+  </section>
+
+  <section class="panel">
+    <div class="form-grid">
+      <div>
+        <label>高考总分</label>
+        <input id="score" type="number" value="550" min="0" max="750">
+      </div>
+      <div>
+        <label>全省位次</label>
+        <input id="rank" type="number" value="80000" min="1">
+      </div>
+      <div>
+        <label>每个模块返回数量</label>
+        <select id="limit">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+        </select>
+      </div>
+      <div>
+        <label>学费上限</label>
+        <input id="tuition" type="number" value="20000" min="0" step="1000">
+      </div>
+    </div>
+
+    <label style="margin-top:12px">选考科目</label>
+    <div class="subjects" id="subjects">
+      <span class="chip on" data-v="物理">物理</span>
+      <span class="chip on" data-v="化学">化学</span>
+      <span class="chip on" data-v="生物">生物</span>
+      <span class="chip" data-v="政治">政治</span>
+      <span class="chip" data-v="历史">历史</span>
+      <span class="chip" data-v="地理">地理</span>
+      <span class="chip" data-v="技术">技术</span>
+    </div>
+
+    <div class="checks">
+      <label class="check"><input id="preferGood" type="checkbox" checked> 优先好就业/通用专业，过滤冷门窄口径专业</label>
+      <label class="check"><input id="allowPrivate" type="checkbox" checked> 接受民办</label>
+      <label class="check"><input id="allowCoop" type="checkbox" checked> 接受中外合作</label>
+      <label class="check"><input id="includeSprint" type="checkbox"> 包含冲刺项</label>
+    </div>
+    <button id="runBtn">立即筛选</button>
+  </section>
+
+  <section class="panel warn">
+    初筛只看位次、选科、计划和历史投档。最终给客户前，必须人工核验招生章程、校区、体检、语种、学费、转专业规则。
+  </section>
+
+  <section class="results">
+    <div class="panel module">
+      <h2>浙江省内推荐</h2>
+      <div id="zhejiangResults"></div>
+    </div>
+    <div class="panel module">
+      <h2>省外推荐</h2>
+      <div id="outsideResults"></div>
+    </div>
+  </section>
+</div>
+
+<script src="data.js"></script>
+<script>
+const preferredKeywords = [
+  "计算机","软件","人工智能","数据科学","大数据","网络空间安全","信息安全","电子信息","通信","微电子","集成电路",
+  "电气","自动化","机器人工程","智能制造","机械设计制造","车辆工程","能源与动力","数学","统计",
+  "会计","财务管理","审计","金融","经济","财政","法学","知识产权","汉语言","新闻","网络与新媒体","英语",
+  "师范","小学教育","临床医学","口腔医学","医学影像","麻醉学","药学","护理学"
+];
+const lowAcceptanceKeywords = [
+  "服装","纺织","轻化工程","皮革","包装工程","印刷","水产","海洋渔业","草业","园艺","植物保护","动物科学",
+  "动物医学","林学","农学","茶学","蚕学","设施农业","种子科学","化学工程与工艺","采矿","矿物","地质工程",
+  "勘查","冶金","无机非金属","材料成型","金属材料","土木工程","给排水","建筑环境","城市地下空间",
+  "旅游管理","酒店管理","会展","市场营销","工商管理","物流管理","文化产业管理","公共事业管理","行政管理"
+];
+const subjectAliases = {"思想政治":"政治","政治":"政治","物理":"物理","化学":"化学","生物":"生物","历史":"历史","地理":"地理","技术":"技术"};
+
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => chip.classList.toggle("on"));
+});
+document.getElementById("runBtn").addEventListener("click", run);
+
+function rowToObject(row) {
+  const obj = {};
+  window.CANDIDATE_FIELDS.forEach((field, i) => obj[field] = row[i]);
+  return obj;
+}
+
+function selectedSubjects() {
+  return new Set([...document.querySelectorAll("#subjects .chip.on")].map(el => el.dataset.v));
+}
+
+function subjectMatches(req, subjects) {
+  if (!req || req.includes("不限") || req.includes("不提科目")) return true;
+  const needed = [];
+  Object.keys(subjectAliases).forEach(k => { if (req.includes(k)) needed.push(subjectAliases[k]); });
+  return needed.every(s => subjects.has(s));
+}
+
+function isPreferredMajor(major) {
+  const preferred = preferredKeywords.some(k => major.includes(k));
+  const low = lowAcceptanceKeywords.some(k => major.includes(k));
+  if (low) return preferred;
+  return preferred;
+}
+
+function riskLabel(rank, refRank) {
+  const margin = refRank - rank;
+  if (margin >= rank * 0.20) return "保";
+  if (margin >= rank * 0.05) return "稳";
+  if (margin >= 0) return "贴线";
+  if (margin >= -rank * 0.15) return "冲";
+  return "略远";
+}
+
+function match(scope) {
+  const rank = Number(document.getElementById("rank").value);
+  const score = Number(document.getElementById("score").value);
+  const limit = Number(document.getElementById("limit").value);
+  const tuitionCap = Number(document.getElementById("tuition").value);
+  const subjects = selectedSubjects();
+  const preferGood = document.getElementById("preferGood").checked;
+  const allowPrivate = document.getElementById("allowPrivate").checked;
+  const allowCoop = document.getElementById("allowCoop").checked;
+  const includeSprint = document.getElementById("includeSprint").checked;
+
+  if (!rank || subjects.size === 0) return [];
+
+  const results = [];
+  for (const raw of window.CANDIDATES) {
+    const c = rowToObject(raw);
+    if (scope === "zhejiang" && c.province !== "浙江省") continue;
+    if (scope === "outside" && c.province === "浙江省") continue;
+    if (!subjectMatches(c.subject_requirement, subjects)) continue;
+    if (tuitionCap && c.tuition && c.tuition > tuitionCap) continue;
+    if (!allowPrivate && String(c.school_nature).includes("民办")) continue;
+    if (!allowCoop && (String(c.school_nature).includes("合作") || String(c.major).includes("中外"))) continue;
+    if (preferGood && !isPreferredMajor(c.major)) continue;
+
+    const risk = riskLabel(rank, c.median_rank);
+    if (!includeSprint && !["稳", "保"].includes(risk)) continue;
+    if (["贴线", "略远"].includes(risk)) continue;
+    results.push({...c, risk, margin: c.median_rank - rank, score});
+  }
+
+  results.sort((a, b) => {
+    const order = {"稳": 0, "保": 1, "冲": 2};
+    const oa = order[a.risk] ?? 9;
+    const ob = order[b.risk] ?? 9;
+    if (oa !== ob) return oa - ob;
+    const ma = a.risk === "保" ? a.margin : Math.abs(a.margin);
+    const mb = b.risk === "保" ? b.margin : Math.abs(b.margin);
+    if (ma !== mb) return ma - mb;
+    return String(a.school + a.major).localeCompare(String(b.school + b.major), "zh-CN");
+  });
+  return results.slice(0, limit);
+}
+
+function render(id, rows) {
+  const box = document.getElementById(id);
+  if (!rows.length) {
+    box.innerHTML = '<div class="empty">没筛到结果。可以放宽学费/民办/中外合作限制，或勾选“包含冲刺项”。</div>';
+    return;
+  }
+  box.innerHTML = rows.map(r => `
+    <div class="card">
+      <div class="topline">
+        <div class="school">${escapeHtml(r.school)}</div>
+        <span class="tag ${r.risk === "保" ? "safe" : "steady"}">${r.risk}</span>
+      </div>
+      <div class="major">${escapeHtml(r.major)}</div>
+      <div class="meta">
+        ${escapeHtml(r.province || "")}${escapeHtml(r.city ? " · " + r.city : "")} · ${escapeHtml(r.school_nature || "")}<br>
+        计划 ${r.plan_count || "待核验"} · 选科 ${escapeHtml(r.subject_requirement || "待核验")} · 学费 ${r.tuition || "待核验"}<br>
+        历史参考位次 ${r.median_rank} · 位次裕量 ${r.margin} · 年份 ${escapeHtml(r.history_years || "")}
+      </div>
+    </div>
+  `).join("");
+}
+
+function run() {
+  render("zhejiangResults", match("zhejiang"));
+  render("outsideResults", match("outside"));
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[ch]));
+}
+
+run();
+</script>
+</body>
+</html>
