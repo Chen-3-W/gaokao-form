@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高考志愿 · 考生资料收集</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+       background: #f5f5f7; color: #1d1d1f; line-height: 1.6; }
+.container { max-width: 680px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.caption { color: #86868b; font-size: 14px; margin-bottom: 20px; }
+h2 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+.row { display: flex; gap: 12px; margin-bottom: 12px; }
+.row > * { flex: 1; }
+label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
+input, select, textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid #d2d2d7; border-radius: 10px;
+  font-size: 15px; background: #fff; outline: none; transition: border .2s; }
+input:focus, select:focus, textarea:focus { border-color: #007aff; }
+textarea { resize: vertical; min-height: 60px; }
+
+.pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+.pill { display: inline-block; padding: 6px 16px; border-radius: 20px; border: 1px solid #d2d2d7;
+        background: #fff; cursor: pointer; font-size: 14px; user-select: none; transition: all .15s; }
+.pill.sel { background: #007aff; color: #fff; border-color: #007aff; }
+
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 12px; margin: 6px 0 10px; }
+.checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+.checkbox-label input[type="checkbox"] { width: auto; accent-color: #007aff; }
+
+.city-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin: 6px 0 10px; }
+.city-row { display: flex; align-items: center; gap: 6px; }
+.city-row .city-name { width: 50px; font-size: 13px; color: #555; text-align: right; flex-shrink: 0; }
+.city-row select { flex: 1; padding: 6px 8px; font-size: 13px; border-radius: 8px; }
+
+.out-box { background: #e8e8ed; border-radius: 12px; padding: 20px; margin-top: 20px; }
+.out-box h2 { margin-top: 0; }
+.out-box pre { background: #fff; padding: 12px; border-radius: 8px; font-size: 13px;
+               white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow-y: auto;
+               border: 1px solid #d2d2d7; }
+
+.btn { display: block; width: 100%; padding: 12px; border-radius: 24px; border: none;
+       font-size: 16px; font-weight: 500; cursor: pointer; margin: 16px 0; }
+.btn-primary { background: #007aff; color: #fff; }
+.btn-primary:hover { background: #0066d6; }
+.btn-download { background: #34c759; color: #fff; margin-top: 8px; }
+.btn-download:hover { background: #28a745; }
+
+.sec-divider { border: none; border-top: 1px solid #d2d2d7; margin: 20px 0; }
+
+.major-list { background: #fff; border: 1px solid #d2d2d7; border-radius: 10px; padding: 12px; margin: 6px 0 10px; font-size: 13px; color: #555; }
+.major-list b { color: #1d1d1f; }
+.major-list .item { padding: 2px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>📋 高考志愿 · 考生资料收集</h1>
+<p class="caption">填完后点底部「生成文本」按钮，复制结果发给咨询师</p>
+
+<!-- 基本信息 -->
+<div class="row">
+  <div><label>姓名</label><input id="name" placeholder="选填"></div>
+  <div><label>性别</label><select id="gender"><option value="">选择</option><option>男</option><option>女</option></select></div>
+</div>
+<div class="row">
+  <div><label>高考总分</label><input id="score" type="number" min="0" max="750" step="1" placeholder="0"></div>
+  <div><label>全省位次（核心）</label><input id="rank" type="number" min="0" max="300000" step="1" placeholder="0"></div>
+</div>
+
+<!-- 选考科目 -->
+<h2>选考科目</h2>
+<div class="checkbox-group" id="subjects">
+  <label class="checkbox-label"><input type="checkbox" value="物理">物理</label>
+  <label class="checkbox-label"><input type="checkbox" value="化学">化学</label>
+  <label class="checkbox-label"><input type="checkbox" value="生物">生物</label>
+  <label class="checkbox-label"><input type="checkbox" value="政治">政治</label>
+  <label class="checkbox-label"><input type="checkbox" value="历史">历史</label>
+  <label class="checkbox-label"><input type="checkbox" value="地理">地理</label>
+  <label class="checkbox-label"><input type="checkbox" value="技术">技术</label>
+</div>
+
+<!-- 职业方向 -->
+<h2>以后想做什么？（多选）</h2>
+<p class="caption">选职业方向比选具体专业更简单，后台会帮你匹配对应的专业</p>
+<div class="pills" id="careerPills"></div>
+<div class="major-list" id="careerMajorDisplay"><span style="color:#aaa">选择职业方向后自动显示可选专业</span></div>
+
+<!-- 抗拒的行业 -->
+<h2>绝对不去的行业（选上就不会推荐相关专业）</h2>
+<p class="caption">选抗拒行业比想排除什么专业更简单</p>
+<div class="pills" id="rejectPills"></div>
+<div class="major-list" id="rejectMajorDisplay"><span style="color:#aaa">选择抗拒行业后自动显示排除专业</span></div>
+
+<!-- 地域 -->
+<h2>地域偏好</h2>
+<div class="pills" id="regionPills">
+  <span class="pill sel" data-v="不限">不限</span>
+  <span class="pill" data-v="尽量省内">尽量省内</span>
+  <span class="pill" data-v="愿意出省">愿意出省</span>
+  <span class="pill" data-v="只去省内">只去省内</span>
+</div>
+
+<h2>偏好城市（可选）</h2>
+<p class="caption">不选择等于默认接受</p>
+<div class="city-grid" id="cityGrid"></div>
+
+<!-- 学校性质 -->
+<h2>学校性质</h2>
+<div class="checkbox-group">
+  <label class="checkbox-label"><input type="checkbox" id="acceptPrivate" checked>接受民办</label>
+  <label class="checkbox-label"><input type="checkbox" id="acceptCoop" checked>接受中外合作</label>
+  <label class="checkbox-label"><input type="checkbox" id="acceptIndependent" checked>接受独立学院</label>
+</div>
+
+<label>学费上限（元/年，0=不限）</label>
+<input id="tuition" type="number" min="0" max="100000" step="5000" placeholder="0">
+
+<!-- 策略 -->
+<h2>填报策略</h2>
+<div class="pills" id="strategyPills">
+  <span class="pill sel" data-v="专业优先（专业>学校>城市）">专业优先</span>
+  <span class="pill" data-v="学校优先（学校>专业>城市）">学校优先</span>
+  <span class="pill" data-v="城市优先（城市>学校>专业）">城市优先</span>
+  <span class="pill" data-v="无明确偏好">无偏好</span>
+</div>
+
+<label>备注</label>
+<textarea id="notes" placeholder="色盲色弱、单科成绩限制、家庭因素等（选填）"></textarea>
+
+<button class="btn btn-primary" onclick="generate()">📋 生成资料文本</button>
+
+<div class="out-box" id="output" style="display:none">
+  <h2>📄 复制以下文本发给咨询师</h2>
+  <pre id="outputText"></pre>
+  <button class="btn btn-download" onclick="downloadText()">⬇ 下载 .txt 文件</button>
+</div>
+
+</div>
+
+<script>
+// ===== 数据 =====
+const CAREER_MAJOR_MAP = {
+  '互联网/科技（程序员、产品、算法等）': ['计算机', '软件工程', '人工智能', '数据科学', '电子', '通信', '微电子', '集成电路'],
+  '当医生/做医疗': ['临床', '口腔', '药学', '护理', '生物医学', '医学影像', '麻醉'],
+  '当老师/做教育': ['师范', '汉语言', '数学', '英语', '物理', '化学', '生物', '教育'],
+  '考公务员/事业编': ['法学', '知识产权', '行政管理', '公共管理', '汉语言', '会计'],
+  '做律师/法务': ['法学', '知识产权'],
+  '进银行/金融/会计': ['金融', '会计', '财务管理', '审计', '经济', '统计'],
+  '做工程师/搞制造': ['电气', '自动化', '机械', '车辆工程', '机器人', '土木', '建筑', '航空航天'],
+  '做生意/创业/管理': ['工商管理', '市场营销', '电子商务', '人力资源', '旅游管理'],
+  '设计/媒体/广告/影视': ['新闻', '广告', '新媒体', '建筑', '设计'],
+  '搞科研/做学术': ['数学', '物理', '化学', '生物', '材料', '统计', '心理学'],
+  '参军/从警/消防': ['公安', '军事', '消防', '安全', '侦察'],
+  '交通/物流/航运': ['交通运输', '物流', '航海', '飞行'],
+  '农业/林业/环境': ['农学', '林学', '环境', '食品', '水产'],
+  '外语/国际/外交': ['英语', '翻译', '外交', '国际'],
+  '艺术/体育/特长生': ['艺术', '音乐', '美术', '设计', '体育'],
+  '没想好，啥都行': [],
+};
+
+const CAREER_OPTIONS = Object.keys(CAREER_MAJOR_MAP);
+const CITIES = ['杭州','宁波','温州','嘉兴','湖州','绍兴','金华','衢州','舟山','台州','丽水','上海','北京','南京','苏州','深圳','广州','成都','武汉','西安','重庆'];
+const CITY_PRIORITIES = ['', '最想去', '次之', '第三选择', '接受', '最不想去'];
+
+// ===== 初始化 pills =====
+function initPills(containerId, options) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = options.map(o => `<span class="pill" data-v="${o}">${o}</span>`).join('');
+  el.querySelectorAll('.pill').forEach(p => {
+    p.addEventListener('click', () => p.classList.toggle('sel'));
+  });
+}
+
+initPills('careerPills', CAREER_OPTIONS);
+initPills('rejectPills', CAREER_OPTIONS);
+
+// 地域偏好单选
+document.querySelectorAll('#regionPills .pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('#regionPills .pill').forEach(x => x.classList.remove('sel'));
+    p.classList.add('sel');
+  });
+});
+
+// 策略单选
+document.querySelectorAll('#strategyPills .pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('#strategyPills .pill').forEach(x => x.classList.remove('sel'));
+    p.classList.add('sel');
+  });
+});
+
+// ===== 城市 =====
+function initCities() {
+  const grid = document.getElementById('cityGrid');
+  CITIES.forEach(city => {
+    const row = document.createElement('div');
+    row.className = 'city-row';
+    row.innerHTML = `<span class="city-name">${city}</span>
+      <select data-city="${city}">
+        ${CITY_PRIORITIES.map(p => `<option value="${p}">${p || '—'}</option>`).join('')}
+      </select>`;
+    grid.appendChild(row);
+  });
+}
+initCities();
+
+// ===== 职业方向→专业 联动显示 =====
+function updateMajorDisplay() {
+  const sel = getSelectedPills('careerPills');
+  const majors = [];
+  const seen = new Set();
+  sel.forEach(c => {
+    (CAREER_MAJOR_MAP[c] || []).forEach(m => { if (!seen.has(m)) { seen.add(m); majors.push(m); } });
+  });
+  const el = document.getElementById('careerMajorDisplay');
+  if (!sel.length) el.innerHTML = '<span style="color:#aaa">选择职业方向后自动显示可选专业</span>';
+  else el.innerHTML = '<b>可选专业：</b>' + (majors.length ? majors.join('、') : '(不限专业)');
+}
+document.getElementById('careerPills').addEventListener('click', updateMajorDisplay);
+
+function updateRejectDisplay() {
+  const sel = getSelectedPills('rejectPills');
+  const majors = [];
+  const seen = new Set();
+  sel.forEach(c => {
+    (CAREER_MAJOR_MAP[c] || []).forEach(m => { if (!seen.has(m)) { seen.add(m); majors.push(m); } });
+  });
+  const el = document.getElementById('rejectMajorDisplay');
+  if (!sel.length) el.innerHTML = '<span style="color:#aaa">选择抗拒行业后自动显示排除专业</span>';
+  else el.innerHTML = '<b>排除专业：</b>' + (majors.length ? majors.join('、') : '(无)');
+}
+document.getElementById('rejectPills').addEventListener('click', updateRejectDisplay);
+
+// ===== 工具函数 =====
+function getSelectedPills(id) {
+  return Array.from(document.querySelectorAll('#' + id + ' .pill.sel')).map(p => p.dataset.v);
+}
+
+function getSelectedRadioValue(id) {
+  const sel = document.querySelector('#' + id + ' .pill.sel');
+  return sel ? sel.dataset.v : '';
+}
+
+// ===== 生成文本 =====
+function generate() {
+  const name = document.getElementById('name').value.trim();
+  const gender = document.getElementById('gender').value;
+  const score = document.getElementById('score').value;
+  const rank = document.getElementById('rank').value;
+  const subjects = Array.from(document.querySelectorAll('#subjects input:checked')).map(c => c.value);
+  const careers = getSelectedPills('careerPills');
+  const rejects = getSelectedPills('rejectPills');
+  const region = getSelectedRadioValue('regionPills');
+  const strategy = getSelectedRadioValue('strategyPills');
+  const tuition = document.getElementById('tuition').value;
+  const notes = document.getElementById('notes').value.trim();
+  const acceptPrivate = document.getElementById('acceptPrivate').checked;
+  const acceptCoop = document.getElementById('acceptCoop').checked;
+  const acceptInd = document.getElementById('acceptIndependent').checked;
+
+  // 城市
+  const cityData = {};
+  const cityReject = [];
+  document.querySelectorAll('#cityGrid select').forEach(sel => {
+    const city = sel.dataset.city;
+    const v = sel.value;
+    if (v === '最不想去') cityReject.push(city);
+    else if (v) cityData[city] = v;
+  });
+
+  const lines = [];
+
+  // 行业→专业对照
+  if (careers.length) {
+    lines.push('==== 你的行业选择对应的可选专业 ====');
+    careers.forEach(c => {
+      const majors = CAREER_MAJOR_MAP[c] || [];
+      lines.push(majors.length ? '  ' + c + ' 可选：' + majors.join('、') : '  ' + c + '（不限专业）');
+    });
+    lines.push('');
+  }
+
+  if (name) lines.push('姓名：' + name);
+  if (gender) lines.push('性别：' + gender);
+  if (score) lines.push('高考总分：' + score);
+  if (rank) lines.push('全省位次：' + rank);
+  if (subjects.length) lines.push('选考科目：' + subjects.join('、'));
+  if (careers.length) {
+    // 所有匹配专业
+    const allMajors = [];
+    const seen = new Set();
+    careers.forEach(c => (CAREER_MAJOR_MAP[c] || []).forEach(m => { if (!seen.has(m)) { seen.add(m); allMajors.push(m); } }));
+    lines.push('职业方向：' + careers.join('、'));
+    if (allMajors.length) lines.push('偏好专业（自动匹配）：' + allMajors.join('、'));
+  }
+  if (rejects.length) {
+    const rejMajors = [];
+    const seen2 = new Set();
+    rejects.forEach(c => (CAREER_MAJOR_MAP[c] || []).forEach(m => { if (!seen2.has(m)) { seen2.add(m); rejMajors.push(m); } }));
+    lines.push('抗拒行业：' + rejects.join('、'));
+    if (rejMajors.length) lines.push('排除专业（自动匹配）：' + rejMajors.join('、'));
+  }
+  lines.push('地域偏好：' + region);
+  const cityStrs = Object.entries(cityData).map(([c, p]) => c + '(优先' + p + ')');
+  if (cityStrs.length) lines.push('偏好城市：' + cityStrs.join('、'));
+  if (cityReject.length) lines.push('排除城市：' + cityReject.join('、'));
+  lines.push('接受民办：' + (acceptPrivate ? '是' : '否'));
+  lines.push('接受中外合作：' + (acceptCoop ? '是' : '否'));
+  lines.push('接受独立学院：' + (acceptInd ? '是' : '否'));
+  if (tuition) lines.push('学费上限：' + tuition + '元/年');
+  lines.push('填报策略：' + strategy);
+  if (notes) lines.push('备注：' + notes);
+
+  const text = lines.join('\n');
+  document.getElementById('outputText').textContent = text;
+  document.getElementById('output').style.display = 'block';
+}
+
+function downloadText() {
+  const text = document.getElementById('outputText').textContent;
+  const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '考生资料.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>
